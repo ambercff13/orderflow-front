@@ -1,0 +1,430 @@
+<main id="main-content" tabindex="-1" class="min-h-screen bg-gray-50 px-6 pb-10 pt-24">
+  <section class="mx-auto max-w-6xl">
+    <header class="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Controle de Estoque</h1>
+      </div>
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300"
+        (click)="openCreate()"
+      >
+        <span class="text-base leading-none">+</span>
+        Novo produto
+      </button>
+    </header>
+
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="font-mono text-xs uppercase tracking-wider text-gray-500">Produtos</p>
+        <p class="mt-2 text-2xl font-bold text-gray-900">{{ totalProducts }}</p>
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="font-mono text-xs uppercase tracking-wider text-gray-500">Valor em estoque</p>
+        <p class="mt-2 text-2xl font-bold text-gray-900">
+          {{ totalStockValue | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+
+      <div
+        class="rounded-xl border bg-white p-5 shadow-sm"
+        [ngClass]="lowStockCount > 0 ? 'border-red-200' : 'border-gray-200'"
+      >
+        <p class="font-mono text-xs uppercase tracking-wider text-gray-500">Alertas</p>
+        <p
+          class="mt-2 text-2xl font-bold"
+          [ngClass]="lowStockCount > 0 ? 'text-red-600' : 'text-gray-900'"
+        >
+          {{ lowStockCount }}
+        </p>
+      </div>
+    </div>
+
+    @if (errorMessage) {
+      <div class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
+        <p>{{ errorMessage }}</p>
+        <button
+          type="button"
+          class="mt-3 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800"
+          (click)="loadProducts()"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    }
+
+    <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <table class="w-full text-left text-sm">
+        <thead
+          class="border-b border-gray-200 bg-gray-50 font-mono text-xs uppercase tracking-wider text-gray-500"
+        >
+          <tr>
+            <th scope="col" class="px-4 py-3 font-medium">Produto</th>
+            <th scope="col" class="px-4 py-3 font-medium">Código do produto</th>
+            <th scope="col" class="px-4 py-3 font-medium">Preço</th>
+            <th scope="col" class="px-4 py-3 font-medium">Saldo</th>
+            <th scope="col" class="px-4 py-3 text-right font-medium">Reabastecer</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isLoading) {
+            <tr>
+              <td colspan="5" class="px-4 py-10 text-center text-gray-500" role="status">
+                Carregando...
+              </td>
+            </tr>
+          } @else {
+            @for (product of products; track product.id) {
+              <tr class="border-t border-gray-100 hover:bg-gray-50">
+                <th scope="row" class="px-4 py-3 text-left font-normal">
+                  <div class="flex items-center gap-3">
+                    @if (product.imageUrl) {
+                      <img
+                        [src]="product.imageUrl"
+                        alt=""
+                        class="h-10 w-10 rounded-md object-cover"
+                      />
+                    } @else {
+                      <div
+                        aria-hidden="true"
+                        class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-100 text-xs text-gray-400"
+                      >
+                        -
+                      </div>
+                    }
+                    <span class="font-medium text-gray-900">{{ product.name }}</span>
+                  </div>
+                </th>
+                <td class="px-4 py-3 font-mono text-gray-600">{{ product.code }}</td>
+                <td class="px-4 py-3 text-gray-900">
+                  {{ product.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                </td>
+                <td class="px-4 py-3">
+                  <span
+                    class="inline-flex min-w-[2.5rem] justify-center rounded-md px-2 py-0.5 font-semibold"
+                    [ngClass]="isLowStock(product) ? 'bg-red-50 text-red-700' : 'text-gray-900'"
+                  >
+                    {{ product.quantity }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button
+                    type="button"
+                    class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    [attr.aria-label]="'Reabastecer ' + product.name"
+                    (click)="openRestock(product)"
+                  >
+                    Reabastecer
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="px-4 py-10 text-center text-gray-500">
+                  Nenhum produto cadastrado.
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mt-3 text-xs text-gray-500">
+      Saldo destacado indica {{ lowStockThreshold }} unidades ou menos, hora de reabastecer.
+    </p>
+  </section>
+</main>
+
+@if (isCreateOpen) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4"
+    (click)="closeCreate()"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-title"
+      class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="mb-5 flex items-center justify-between">
+        <h2 id="create-title" class="text-lg font-semibold text-gray-900">Novo produto</h2>
+        <button
+          type="button"
+          class="text-gray-400 hover:text-gray-600"
+          (click)="closeCreate()"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+      </div>
+
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="flex flex-col gap-4">
+        <div>
+          <label for="name" class="mb-1 block text-sm font-medium text-gray-700">Nome</label>
+          <input
+            id="name"
+            type="text"
+            required
+            formControlName="name"
+            placeholder="Nome do produto"
+            class="block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            [class.border-red-400]="
+              createForm.controls.name.touched && createForm.controls.name.invalid
+            "
+            [attr.aria-invalid]="
+              createForm.controls.name.touched && createForm.controls.name.invalid
+            "
+            [attr.aria-describedby]="
+              createForm.controls.name.touched && createForm.controls.name.invalid
+                ? 'create-name-error'
+                : null
+            "
+          />
+          @if (createForm.controls.name.touched && createForm.controls.name.invalid) {
+            <p id="create-name-error" class="mt-1 text-xs text-red-700">
+              Informe um nome com até 120 caracteres.
+            </p>
+          }
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="code" class="mb-1 block text-sm font-medium text-gray-700"
+              >Código do produto</label
+            >
+            <input
+              id="code"
+              type="text"
+              required
+              formControlName="code"
+              placeholder="Código do produto"
+              class="block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              [class.border-red-400]="
+                createForm.controls.code.touched && createForm.controls.code.invalid
+              "
+              [attr.aria-invalid]="
+                createForm.controls.code.touched && createForm.controls.code.invalid
+              "
+              [attr.aria-describedby]="
+                createForm.controls.code.touched && createForm.controls.code.invalid
+                  ? 'create-code-error'
+                  : null
+              "
+            />
+            @if (createForm.controls.code.touched && createForm.controls.code.invalid) {
+              <p id="create-code-error" class="mt-1 text-xs text-red-700">
+                Informe um código com até 50 caracteres.
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="quantity" class="mb-1 block text-sm font-medium text-gray-700">Saldo</label>
+            <input
+              id="quantity"
+              type="number"
+              min="0"
+              required
+              formControlName="quantity"
+              placeholder="Saldo"
+              class="block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              [attr.aria-invalid]="
+                createForm.controls.quantity.touched && createForm.controls.quantity.invalid
+              "
+              [attr.aria-describedby]="
+                createForm.controls.quantity.touched && createForm.controls.quantity.invalid
+                  ? 'create-quantity-error'
+                  : null
+              "
+            />
+            @if (createForm.controls.quantity.touched && createForm.controls.quantity.invalid) {
+              <p id="create-quantity-error" class="mt-1 text-xs text-red-700">
+                Informe um saldo igual ou maior que zero.
+              </p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="price" class="mb-1 block text-sm font-medium text-gray-700">Preço</label>
+          <input
+            id="price"
+            type="text"
+            inputmode="decimal"
+            required
+            formControlName="price"
+            placeholder="Preço (ex: 49,90)"
+            class="block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            [class.border-red-400]="
+              createForm.controls.price.touched && createForm.controls.price.invalid
+            "
+            [attr.aria-invalid]="
+              createForm.controls.price.touched && createForm.controls.price.invalid
+            "
+            [attr.aria-describedby]="
+              createForm.controls.price.touched && createForm.controls.price.invalid
+                ? 'create-price-error'
+                : null
+            "
+          />
+          @if (createForm.controls.price.touched && createForm.controls.price.invalid) {
+            <p id="create-price-error" class="mt-1 text-xs text-red-700">
+              Informe um preço válido com até duas casas decimais.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="image" class="mb-1 block text-sm font-medium text-gray-700"
+            >Imagem (opcional)</label
+          >
+          <input
+            id="image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onImageSelected($event)"
+            class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-200"
+          />
+          @if (imagePreview) {
+            <img
+              [src]="imagePreview"
+              alt="Pré-visualização"
+              class="mt-3 h-32 w-full rounded-lg object-cover"
+            />
+          }
+          @if (imageError) {
+            <p class="mt-1 text-xs text-red-600">{{ imageError }}</p>
+          }
+        </div>
+
+        @if (formError) {
+          <p
+            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ formError }}
+          </p>
+        }
+
+        <div class="mt-2 flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            (click)="closeCreate()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSaving"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {{ isSaving ? 'Salvando...' : 'Cadastrar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (restockProduct) {
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4"
+    (click)="closeRestock()"
+  >
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="restock-title"
+      class="max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <h2 id="restock-title" class="text-lg font-semibold text-gray-900">Reabastecer</h2>
+      <p class="mt-1 text-sm text-gray-600">
+        {{ restockProduct.name }} · saldo atual: <strong>{{ restockProduct.quantity }}</strong>
+      </p>
+
+      <form [formGroup]="restockForm" (ngSubmit)="submitRestock()" class="mt-5 flex flex-col gap-4">
+        <div>
+          <label for="amount" class="mb-1 block text-sm font-medium text-gray-700"
+            >Quantidade a adicionar</label
+          >
+          <input
+            id="amount"
+            type="number"
+            min="1"
+            required
+            formControlName="amount"
+            class="block w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            [attr.aria-invalid]="
+              restockForm.controls.amount.touched && restockForm.controls.amount.invalid
+            "
+            [attr.aria-describedby]="
+              restockForm.controls.amount.touched && restockForm.controls.amount.invalid
+                ? 'restock-amount-error'
+                : null
+            "
+          />
+          @if (restockForm.controls.amount.touched && restockForm.controls.amount.invalid) {
+            <p id="restock-amount-error" class="mt-1 text-xs text-red-700">
+              Informe uma quantidade igual ou maior que um.
+            </p>
+          }
+        </div>
+
+        <div>
+          <label for="restock-image" class="mb-1 block text-sm font-medium text-gray-700"
+            >Trocar imagem (opcional)</label
+          >
+          <input
+            id="restock-image"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onImageSelected($event)"
+            class="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-sm file:font-medium hover:file:bg-gray-200"
+          />
+          @if (imagePreview) {
+            <img
+              [src]="imagePreview"
+              alt="Pré-visualização"
+              class="mt-3 h-32 w-full rounded-lg object-cover"
+            />
+          }
+          @if (imageError) {
+            <p class="mt-1 text-xs text-red-600">{{ imageError }}</p>
+          }
+        </div>
+
+        @if (formError) {
+          <p
+            class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+            role="alert"
+          >
+            {{ formError }}
+          </p>
+        }
+
+        <div class="flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            (click)="closeRestock()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="isSaving"
+            class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {{ isSaving ? 'Salvando...' : 'Confirmar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

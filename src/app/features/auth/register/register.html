@@ -1,0 +1,122 @@
+<main id="main-content" tabindex="-1" class="bg-gray-50">
+  <div class="mx-auto flex min-h-screen flex-col items-center justify-center px-6 py-8">
+    <a routerLink="/" class="mb-6 flex items-center">
+      <img class="h-10 w-auto" src="assets/icon.png" alt="OrderFlow" />
+    </a>
+
+    <div class="w-full rounded-lg bg-white shadow sm:max-w-md">
+      <div class="space-y-4 p-6 sm:p-8 md:space-y-6">
+        <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
+          Crie sua conta
+        </h1>
+
+        <form
+          class="space-y-4 md:space-y-6"
+          #registerForm="ngForm"
+          (ngSubmit)="onSubmit(registerForm)"
+          novalidate
+        >
+          <div>
+            <label for="name" class="mb-2 block text-sm font-medium text-gray-900">Nome</label>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              placeholder="Seu nome"
+              required
+              maxlength="120"
+              [(ngModel)]="name"
+              #nameCtrl="ngModel"
+              [attr.aria-invalid]="nameCtrl.invalid && nameCtrl.touched"
+              [attr.aria-describedby]="nameCtrl.invalid && nameCtrl.touched ? 'name-error' : null"
+              class="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              [class.border-red-400]="nameCtrl.invalid && nameCtrl.touched"
+              [class.border-gray-300]="!(nameCtrl.invalid && nameCtrl.touched)"
+            />
+            @if (nameCtrl.invalid && nameCtrl.touched) {
+              <p id="name-error" class="mt-1 text-xs text-red-700">
+                Informe seu nome (até 120 caracteres).
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="email" class="mb-2 block text-sm font-medium text-gray-900"
+              >Seu e-mail</label
+            >
+            <input
+              type="email"
+              name="email"
+              id="email"
+              placeholder="nome@empresa.com"
+              required
+              email
+              [(ngModel)]="email"
+              #emailCtrl="ngModel"
+              [attr.aria-invalid]="emailCtrl.invalid && emailCtrl.touched"
+              [attr.aria-describedby]="
+                emailCtrl.invalid && emailCtrl.touched ? 'email-error' : null
+              "
+              class="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              [class.border-red-400]="emailCtrl.invalid && emailCtrl.touched"
+              [class.border-gray-300]="!(emailCtrl.invalid && emailCtrl.touched)"
+            />
+            @if (emailCtrl.invalid && emailCtrl.touched) {
+              <p id="email-error" class="mt-1 text-xs text-red-700">
+                Informe um endereço de e-mail válido.
+              </p>
+            }
+          </div>
+
+          <div>
+            <label for="password" class="mb-2 block text-sm font-medium text-gray-900">Senha</label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              placeholder="••••••••"
+              required
+              minlength="6"
+              [(ngModel)]="password"
+              #passwordCtrl="ngModel"
+              [attr.aria-invalid]="passwordCtrl.invalid && passwordCtrl.touched"
+              [attr.aria-describedby]="
+                passwordCtrl.invalid && passwordCtrl.touched ? 'password-error' : null
+              "
+              class="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              [class.border-red-400]="passwordCtrl.invalid && passwordCtrl.touched"
+              [class.border-gray-300]="!(passwordCtrl.invalid && passwordCtrl.touched)"
+            />
+            @if (passwordCtrl.invalid && passwordCtrl.touched) {
+              <p id="password-error" class="mt-1 text-xs text-red-600">
+                A senha deve ter pelo menos 6 caracteres.
+              </p>
+            }
+          </div>
+
+          @if (errorMessage) {
+            <p
+              class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+              role="alert"
+            >
+              {{ errorMessage }}
+            </p>
+          }
+
+          <button
+            type="submit"
+            [disabled]="isSaving"
+            class="w-full rounded-lg bg-blue-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {{ isSaving ? 'Criando conta...' : 'Criar conta' }}
+          </button>
+
+          <p class="text-sm font-light text-gray-500">
+            Já tem uma conta?
+            <a routerLink="/login" class="font-medium text-blue-600 hover:underline">Entrar</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
